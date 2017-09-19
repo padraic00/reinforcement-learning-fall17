@@ -1,0 +1,219 @@
+<h1 id="reinforcement-learning-notes">Reinforcement Learning Notes</h1>
+
+<p>Below are all the notes taken from Chapter 6 onward for Sutton and Barto <em>Reinforcement Learning</em>.</p>
+
+<hr>
+
+
+
+<h2 id="chapter-6">Chapter 6</h2>
+
+<ul>
+<li>Temporal Difference Learning is the idea central and novel to reinforcement learning</li>
+<li>Combination of Monte Carlo and DP ideas <br>
+<ul><li>Can learn directly from experience like Monte Carlo</li>
+<li>Update estimates in a bootstrapped methods like DP</li></ul></li>
+</ul>
+
+
+
+<h3 id="section-61-td-prediction">Section 6.1: TD Prediction</h3>
+
+<ul>
+<li>While both TD and Monte Carlo follow some policy $ \pi $ to update their estimate their estimates $ v $ of $ v_\pi $ for the nonterminal states $ S_t $ </li>
+<li>However Monte Carlo methods must wait until the return is known and then use that as a target for $ V(S_t) $  <br>
+<ul><li>$ V(S_t) \leftarrow V(S_t) + \alpha[G_t - V(S_t)]$ with $G_t$ as the actual return following time $t$, and $\alpha$ is a constant step-size parameter. This is called $constant-\alpha,MC$</li></ul></li>
+<li>TD methods need only wait till the next time step to increment $V(S)$. The simplest TD Learning Method is called $TD(0)$ <br>
+<ul><li>$V(S_t) \leftarrow V(S_t) + \alpha[R_{t+1}+\gamma V(S_{t+1})-V(S_t)$</li>
+<li>The effective target for the Monte Carlo update is $G_t$, for TD it is $R_{t+1}+\gamma V_t(S_{t+1})$</li></ul></li>
+</ul>
+
+<blockquote>
+  <p><strong>TD(0):</strong> <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdYU9iT3B4T2pDc0U" alt="TD(0) Code" title=""></p>
+</blockquote>
+
+<ul>
+<li>Refer to TD updates as <em>sample backups</em> because they involve looking ahead to a sample successor state, use the successor value and reward along the way to compute a backed-up value, and adjust the original state accordingly <br>
+
+
+<blockquote>
+  <p><strong>Example 6.1: Driving Home</strong>&lt; <br>
+  - When driving home you try to estimate how long you will take <br>
+  - Beginning states are defined by time of day, day of week <br>
+  - E.g. On Friday, you leave at 6 PM, and you estimate it’ll take 30 minutes <br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - When you reach your car at 6:05, it starts to rain, which slows traffic so you adjust the estimate to 35 minutes from then, or 6:40 <br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - 15 minutes later, you have made up time on the highway so you readjust to 6:35 <br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - On the secondary road, you gt stuck behind a truck all the way till you reach your street at 6:40 <br>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; - 3 minutes later you reach home</p></blockquote></li>
+  </ul>
+  
+  <table>
+<thead>
+<tr>
+  <th align="left">State</th>
+  <th align="right">Elapsed Time</th>
+  <th align="center">Predicted Time to Go</th>
+  <th align="right">Predicted Total</th>
+</tr>
+</thead>
+<tbody><tr>
+  <td align="left">leaving office, friday at 6</td>
+  <td align="right">0</td>
+  <td align="center">30</td>
+  <td align="right">30</td>
+</tr>
+<tr>
+  <td align="left">reach car, raining</td>
+  <td align="right">$12</td>
+  <td align="center">5</td>
+  <td align="right">35</td>
+</tr>
+<tr>
+  <td align="left">exiting highway</td>
+  <td align="right">20</td>
+  <td align="center">15</td>
+  <td align="right">35</td>
+</tr>
+<tr>
+  <td align="left">2ndary road, behind truck</td>
+  <td align="right">30</td>
+  <td align="center">10</td>
+  <td align="right">40</td>
+</tr>
+<tr>
+  <td align="left">entering home street</td>
+  <td align="right">40</td>
+  <td align="center">3</td>
+  <td align="right">43</td>
+</tr>
+<tr>
+  <td align="left">arrive home</td>
+  <td align="right">43</td>
+  <td align="center">0</td>
+  <td align="right">43</td>
+</tr>
+</tbody></table>
+
+  
+  <p>- Rewards=elapsed times on each leg <br>
+  - Value = <em>expected</em> time to go <br>
+  - Monte Carlo is effectively a plot of the Predicted Total column: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdR1QtV3lWc080ak0" alt="Plot" title=""> <br>
+  - Any changes to the policy must be made after coming home. Is this really necessary? <br>
+  - Suppose instead another day you estimate it will take 30 minutes, but you get stuck in a massive jam <br>
+  - 25 minutes after leaving the office you are still bumper-to-bumper on the highway, now your estimate is another 25 until you are home <br>
+  - While sitting around in traffic, you have made the decision that the 30 minutes initial is too optimistic. What is the point of waiting to adjust until you get home? <br>
+  - <strong>TD</strong> would point you to adjust every estimate toward the estimate following it <br>
+  - Below is a plot of what TD recommends as opposed to the MC above. Each error is proportional to the change over time of the prediction, or the <em>temporal differences</em> in predictions: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdQUtIdElHVnhaSmM" alt="TD Plot" title=""> <br>
+  - There are many computational reasons why it is advantageous to learn based on current predictions rather than waiting till termination</p>
+
+
+
+
+
+
+<h3 id="section-62-advantages-of-td-models">Section 6.2: Advantages of TD Models</h3>
+
+<ul>
+<li>TD methods learn a guess from a guess-they <em>bootstrap</em></li>
+<li>TD methods are better than DP methods because they do not require a complete model of the environment</li>
+<li>TD methods are fully online as opposed to Monte Carlo’s episodic task completion learning <br>
+<ul><li>With applications with long episodes, this can be significantly better</li></ul></li>
+<li>TD methods do mathematically converge to right policy. If both MC and TD converge, which converges faster?</li>
+<li>Mathematically, this hasn’t been proven by any means. However, in practice, TD methods are quicker than constant-$\alpha$ MC methods</li>
+</ul>
+
+<blockquote>
+  <p><strong>TD(0):</strong> <br>
+  - Consider the following random walk Markov process: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdVmFyNEJ0ZTZ0bjg" alt="Random Walk" title=""> <br>
+  - Lets compare the prediction capabilities of TD(0) and constant-$\alpha$ MC <br>
+  - All episodes start in state C, and go left or right by one with equal probability <br>
+  - Episodes terminate when they reach the terminal points on the extreme left or right, only the right results in reward +1 <br>
+  - Thus, the expected value of all states A-D are, in order, $\frac{1}{6},, \frac{2}{6},, \frac{3}{6},, \frac{4}{6},, \frac{5}{6}$ <br>
+  - Below is the learned values from TD(0) labeled by the number of runs: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdQnktbmRNTTJIbUE" alt="Figure 6.6" title=""> <br>
+  - Below is a comparison of the learning curves of TD(0) and constant-$\alpha$ MC in a RMS error plot: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdX1puZVZoRFhSb0E" alt="Figure 6.7" title=""> <br>
+  - <strong>Seems obviously like a good application for random walk finance methods. Imagine that state C is the current price of an asset, and state E is a target increase, say a 10% return. One could simply watch the asset as it returns to C, and quantify the value of other states until it hits E. The learner will have essentially figured out the time horizon and patterns for that particular asset.</strong></p>
+</blockquote>
+
+
+
+<h3 id="63-optimality-of-td0">6.3: Optimality of TD(0)</h3>
+
+<ul>
+<li>Suppose that only a finite amount of experience in episodes or time steps is available</li>
+<li>Commonly, the data is run over and over convergence <br>
+<ul><li>In this case, the increments to the value function are stashed until that run of data is finished</li>
+<li>Then, when that run is finished, the increments are summed and modify the value function</li>
+<li>This is called <em>batched updating</em></li></ul></li>
+<li>Under this scheme, TD(0) converges to a single answer independent of the step-size $\alpha$, as long as its chosen to be sufficiently small</li>
+<li>MC also converges in batch updating, but to a less correct answer: <br>
+<img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdSDhJMEQxWFFDRTQ" alt="Figure 6.8" title=""></li>
+<li><p>Technically, constant-$\alpha$ MC methods do get error estimates from returns in inside the value policy, but the TD is optimal in a much better way to predict returns</p>
+
+<blockquote>
+  <p><strong>Example 6.4:</strong></p>
+  
+  <ul><li>Imagine that you are the predictor of returns for an unknown Markov reward process</li>
+  <li>Observe the following eight episodes: <br>
+  <img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdTmFjTkVhbnMxR1E" alt="Example 6.4" title=""></li>
+  <li>This translates to the first episode starting in state A, transitioning to B with reward 0, and then terminated from B with reward 0, the other episodes terminated immediately</li>
+  <li>Any logical predictor would say $V(B)=\frac{3}{4}$, because all episodes of B terminated immediately, 6 out of 8 episodes containing B terminated  at value 1 and the others at value 0</li>
+  <li>V(A) can only be estimated based on the fact that the only time it got state A, it went to state B, meaning that $V(A)=\frac{3}{4}$</li>
+  <li>The other option is that because the net reward at the end of the state with A is 0, $V(B)=0$. This is the answer batch Monte Carlo gives</li>
+  <li>While batch Monte Carlo gives the least minimum squared error, actually zero error, but we still think the first estimate makes more sense</li></ul>
+</blockquote></li>
+<li><p>The difference is clear: batched Monte Carlo always find the estimates that minimize mean-squared error on the training set, while batched TD(0) will always find the estimates that would be exactly correct for the maximum-likelihood model of the Markov process</p></li>
+<li>The <em>maximum-likelihood estimate</em> of a parameter is the parameter whose probability of generating the data is greatest <br>
+<ul><li>In this case, the MLE is the model of the Markov Process: the estimated transition probability from i to j is the fraction of observed transition from i that went to j, and the associated expected reward is the average of the rewards received from such a transition</li></ul></li>
+<li>Given this model, the estimate of the value function that would be correct if the model was correct can be computed <br>
+<ul><li>This is called the <em>certainty-equivalence estimate</em>, because it is equivalent to assuming that the estimate of the underlying process was known with certainty rather than being approximated</li></ul></li>
+<li>In general TD(0) converges to this</li>
+<li>This explains why TD methods converge more quickly than MC <br>
+<ul><li>In batch form, TD(0) computes the true certainty-equivalence estimate</li></ul></li>
+<li>Although the certainty-equivalence estimate is optimal in some ways, it isn’t feasible to compute it directly <br>
+<ul><li>The process takes $N^2$ memory and $N^3$ time steps</li></ul></li>
+<li>TD(0) are suprisingly able to estimate it with memory N and just repeated computation over the set </li>
+</ul>
+
+
+
+<h3 id="64-sarsa-on-policy-td">6.4: Sarsa- On-Policy TD</h3>
+
+<ul>
+<li>Lets look at TD for policy control</li>
+<li>The first step is to compute an action-value function rather than a state-value function <br>
+<ul><li>Recall that an episode consists of an alternating sequence of states and state-action pairs</li></ul></li>
+<li>Previously, we consider transitions from state to state and learned the values. Instead lets, consider transitions from state-action pair to pair, and learn the values of these pairs</li>
+<li>Theorems assuring converegence for TD(0) still apply for the following equation: <br>
+<img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdR01zdkNRekU1WkU" alt="Equation 6.5" title=""></li>
+<li>This rule uses every element of the quintuple: $(S_t,, A_t,, R_{t+1},  S_{t+1},,A_{t+1})$ <br>
+<ul><li>Gives rise to the name Sarsa</li></ul></li>
+<li>As with all on-policy, we continually estimate $q_{\pi} $ for the behavior policy $\pi$, and at the same time modify $\pi$ towards $q_{\pi} $ <br>
+<img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdRE9Dc3p2eWFSdzA" alt="Figure 6.9" title=""></li>
+</ul>
+
+
+
+<h3 id="65-q-learning-off-policy-td-control">6.5: Q-Learning- Off-Policy TD Control</h3>
+
+<ul>
+<li>Q-Learning is the off policy TD Control method. One step Q Learning is the following equation: <br>
+$Q(S_t,A_t)\leftarrow Q(S_t,A_t) + \alpha [R_{t+1}+\gamma max_a(Q(S_{t+1},a))-Q(S_t,A_t)]$</li>
+<li>Q directly approximates $q_{*}$, the optimal value function</li>
+<li>Q will converge with probability 1 to $q_{*}$ if all steps continue to be updated</li>
+<li>The Q-Learning Algorithm is this: <br>
+<img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdNk5IdEwxcmE0U28" alt="Figure 6.12" title=""></li>
+<li>The Q-Learning backup diagram is this: <br>
+<img src="https://drive.google.com/uc?id=0B3oXhBTHfrfdQUhVSFFUOTVRSUE" alt="Figure 6.14" title=""></li>
+</ul>
+
+
+
+<h4 id="exercise-611">Exercise 6.11</h4>
+
+<p>Q-learning is considered off-policy because it learns the optimal policy independent of the policy being followed. All that is required of the behavior policy is that it visits every state and continues to update its value function. Sarsa learns the Q function to approximate the ideal Q function, Q-learning learns the policy that approximates the idea policy.</p>
