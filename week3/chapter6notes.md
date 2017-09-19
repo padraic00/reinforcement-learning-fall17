@@ -131,4 +131,7 @@ $Q(S_t,A_t)\leftarrow Q(S_t,A_t) + \alpha [R_{t+1}+\gamma max_a(Q(S_{t+1},a))-Q(
 * The Q-Learning backup diagram is this:
 ![Figure 6.14](https://drive.google.com/uc?id=0B3oXhBTHfrfdQUhVSFFUOTVRSUE)
 
+#### Exercise 6.11
+Q-learning is considered off-policy because it learns the optimal policy independent of the policy being followed. All that is required of the behavior policy is that it visits every state and continues to update its value function. Sarsa learns the Q function to approximate the ideal Q function, Q-learning learns the policy that approximates the idea policy.
+
 
